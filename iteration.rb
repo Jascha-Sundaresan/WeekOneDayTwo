@@ -43,9 +43,7 @@ def substrings(string)
 end
 
 def subwords(string)
-  english_words = File.readlines('dictionary.txt').map(&:chomp)
-  
-  english_words & substrings(string)
+  File.readlines('dictionary.txt').map(&:chomp) & substrings(string)
 end
 
 p subwords('cat')

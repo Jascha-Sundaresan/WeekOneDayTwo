@@ -20,14 +20,18 @@ class Board
   end
   
   def place_mark(pos, mark)
-    x,y = pos
+    x, y = pos
     grid[x][y] = mark
+  end
+  
+  def valid_choices
+    [0, 1, 2]
   end
      
   def valid_move?(pos)
-    valid_choices = [0, 1, 2]
-    valid_choices.include?(pos[0]) && valid_choices.include?(pos[1]) && 
-          empty?(pos) 
+    valid_choices.include?(pos.first) &&
+    valid_choices.include?(pos.last) && 
+    empty?(pos) 
   end
   
   def full?
@@ -36,6 +40,7 @@ class Board
         return false if empty?([row,col])
       end
     end
+    
     true
   end
     
@@ -89,11 +94,7 @@ class HumanPlayer < Player
   
   def choose_move(board)
     begin
-      puts "pick row"
-      col = Integer(gets.chomp)
-      puts "pick column"
-      row = Integer(gets.chomp)
-      pos = [col - 1, row - 1] 
+      pos = get_position 
       raise InputError.new("That's not a valid move") unless board.valid_move?(pos)
       self.move(pos, board)
     rescue InputError => error
@@ -103,6 +104,16 @@ class HumanPlayer < Player
       puts error
       retry
     end
+  end
+  
+  private
+  
+  def get_position
+    puts "pick row"
+    col = Integer(gets.chomp)
+    puts "pick column"
+    row = Integer(gets.chomp)
+    [row - 1 ,col - 1]
   end
     
   
@@ -118,8 +129,7 @@ class ComputerPlayer < Player
   def can_win(board)
     (0..2).each do |col|
       (0..2).each do |row|
-        test_board = Board.new
-        test_board.grid = board.grid.deep_dup
+        test_board = create_test_board(board)
         pos = [row, col]
         next unless test_board.valid_move?(pos)
         self.move(pos, test_board)
@@ -129,11 +139,17 @@ class ComputerPlayer < Player
     nil
   end
   
+  def create_test_board(board)
+    test_board = Board.new
+    test_board.grid = board.grid.deep_dup
+    test_board
+  end
+  
   def random_move(board)
     possible_moves = []
     (0..2).each do |col|
       (0..2).each do |row|
-        pos = [row,col]
+        pos = [row, col]
         possible_moves << pos if board.valid_move?(pos)
       end
     end
@@ -147,12 +163,9 @@ class Game
   attr_accessor :current_player
   
   def initialize(player1, player2)
-    @player1 = player1
-    @player1.mark = "X"
-    @player1.name = "Player 1"
-    @player2 = player2
-    @player2.mark = "O"
-    @player2.name = "Player 2"
+    @player1, @player2 = player1, player2
+    @player1.mark, @player2.mark = "X", "O"
+    @player1.name, @player2.name = "Player 1", "Player 2"
     @board = Board.new
     @current_player = player1
   end
@@ -164,11 +177,7 @@ class Game
       switch_players
     end
     switch_players
-    if board.won?
-      puts "#{current_player.name} wins!"
-    else
-      puts "Draw"
-    end
+    puts (board.won? ? "#{current_player.name} wins!" : "Draw")
     board.display
   end
   
